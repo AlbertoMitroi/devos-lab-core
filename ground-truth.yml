@@ -1,0 +1,187 @@
+# Ground truth for lab-core, written from its source only (no README, no engine output).
+# Each item: question, expected answer, file:line evidence. Any later change is logged with reason and evidence.
+repository: lab-core
+sourceCommit: bacebb1372bbb45718916abff1f34aea44579e70
+items:
+  - id: core-packages
+    area: packages
+    question: Which NuGet packages does this repository produce?
+    expected:
+      - Lab.Core.Transform.Bpmn
+      - Lab.Core.Workflow.EventFlow
+      - Lab.Core.MessageHubs
+      - Lab.Core.Clients.Pricing
+    evidence:
+      - src/Lab.Core.Transform.Bpmn/Lab.Core.Transform.Bpmn.csproj:4
+      - src/Lab.Core.Workflow.EventFlow/Lab.Core.Workflow.EventFlow.csproj:4
+      - src/Lab.Core.MessageHubs/Lab.Core.MessageHubs.csproj:4
+      - src/Lab.Core.Clients.Pricing/Lab.Core.Clients.Pricing.csproj:4
+
+  - id: core-package-version
+    area: packages
+    question: What version do the packages get when no version is passed?
+    expected: 1.0.0 (the CI publish job overrides it with the tag name without the leading v)
+    evidence:
+      - Directory.Build.props:7
+      - Dockerfile:15
+
+  - id: core-project-references
+    area: references
+    question: Which project references exist between the packages?
+    expected: Lab.Core.Workflow.EventFlow references Lab.Core.Transform.Bpmn; no other project references between packages.
+    evidence:
+      - src/Lab.Core.Workflow.EventFlow/Lab.Core.Workflow.EventFlow.csproj:8
+
+  - id: core-bpmn-loader
+    area: workflow
+    question: How is a process definition loaded, and where does its metadata come from?
+    expected: BpmnProcessLoader.LoadFile reads the .bpmn file and the sibling file with the same name plus the suffix ".ProcessMetaData.json"; LoadDirectory loads every process in a folder.
+    evidence:
+      - src/Lab.Core.Transform.Bpmn/BpmnProcessLoader.cs:12
+      - src/Lab.Core.Transform.Bpmn/BpmnProcessLoader.cs:18
+      - src/Lab.Core.Transform.Bpmn/BpmnProcessLoader.cs:20
+      - src/Lab.Core.Transform.Bpmn/BpmnProcessLoader.cs:27
+
+  - id: core-node-kinds
+    area: workflow
+    question: Which BPMN node kinds does the model know?
+    expected: [StartEvent, EndEvent, ServiceTask, UserTask, ExclusiveGateway, ParallelGateway]
+    evidence:
+      - src/Lab.Core.Transform.Bpmn/ProcessDefinition.cs:3
+
+  - id: core-process-metadata
+    area: workflow
+    question: Which fields does a ProcessMetaData file carry?
+    expected: ProcessId, DisplayName, StartedBy (flow event or fact names that start a flow), Statuses (end event id to status), Actions (name to DisplayName and AvailableDuring task ids), Participants (lane to work team).
+    evidence:
+      - src/Lab.Core.Transform.Bpmn/ProcessMetaData.cs:6
+      - src/Lab.Core.Transform.Bpmn/ProcessMetaData.cs:13
+      - src/Lab.Core.Transform.Bpmn/ProcessMetaData.cs:16
+      - src/Lab.Core.Transform.Bpmn/ProcessMetaData.cs:19
+      - src/Lab.Core.Transform.Bpmn/ProcessMetaData.cs:22
+      - src/Lab.Core.Transform.Bpmn/ProcessMetaData.cs:25
+
+  - id: core-flow-events
+    area: eventstore
+    question: Which flow events exist?
+    expected: FlowStarted, TaskCompleted, ActionExecuted, FlowDataUpdated, FlowStatusChanged and FlowFactRaised, all deriving from the abstract record FlowEvent(Guid FlowId).
+    evidence:
+      - src/Lab.Core.Workflow.EventFlow/FlowEvents.cs:4
+      - src/Lab.Core.Workflow.EventFlow/FlowEvents.cs:6
+      - src/Lab.Core.Workflow.EventFlow/FlowEvents.cs:9
+      - src/Lab.Core.Workflow.EventFlow/FlowEvents.cs:11
+      - src/Lab.Core.Workflow.EventFlow/FlowEvents.cs:13
+      - src/Lab.Core.Workflow.EventFlow/FlowEvents.cs:15
+      - src/Lab.Core.Workflow.EventFlow/FlowEvents.cs:18
+
+  - id: core-flow-aggregate
+    area: eventstore
+    question: Which aggregate applies the flow events, and which statuses are built in?
+    expected: FlowAggregate has one Apply method per flow event; FlowStatuses defines Started, InProgress and Withdrawn.
+    evidence:
+      - src/Lab.Core.Workflow.EventFlow/FlowAggregate.cs:9
+      - src/Lab.Core.Workflow.EventFlow/FlowAggregate.cs:27
+      - src/Lab.Core.Workflow.EventFlow/FlowAggregate.cs:53
+      - src/Lab.Core.Workflow.EventFlow/FlowAggregate.cs:58
+
+  - id: core-analyzer
+    area: workflow
+    question: What does EventFlowAnalyzer return, and how does it choose at an exclusive gateway?
+    expected: Analyze(ProcessDefinition, FlowAggregate) returns FlowAnalysis (process id, open tasks with lane and work team, available actions, status, completed flag, reached end event). At an exclusive gateway it takes the flow whose condition equals the last outcome, else the default flow. A Withdrawn flow returns no tasks and no actions and counts as completed.
+    evidence:
+      - src/Lab.Core.Workflow.EventFlow/EventFlowAnalyzer.cs:7
+      - src/Lab.Core.Workflow.EventFlow/EventFlowAnalyzer.cs:21
+      - src/Lab.Core.Workflow.EventFlow/EventFlowAnalyzer.cs:23
+      - src/Lab.Core.Workflow.EventFlow/EventFlowAnalyzer.cs:71
+      - src/Lab.Core.Workflow.EventFlow/EventFlowAnalyzer.cs:77
+      - src/Lab.Core.Workflow.EventFlow/EventFlowAnalyzer.cs:110
+      - src/Lab.Core.Workflow.EventFlow/EventFlowAnalyzer.cs:111
+
+  - id: core-plugin-interfaces
+    area: workflow
+    question: Which plugin interfaces does the Flow Engine define, and with which method?
+    expected:
+      - "IHandleServiceTask: Task<string?> Handle(FlowContext, CancellationToken)"
+      - "IHandleUserTaskCommand<in TCommand> where TCommand : IUserTaskCommand: Task<string?> Handle(TCommand, FlowContext, CancellationToken)"
+      - "IHandleAction: Task Handle(FlowContext, CancellationToken)"
+      - "IHandleNewFlow: Task Initialize(FlowContext, IReadOnlyDictionary<string, string>, CancellationToken)"
+    evidence:
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleServiceTask.cs:7
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleServiceTask.cs:10
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleUserTaskCommand.cs:12
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleUserTaskCommand.cs:15
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleAction.cs:6
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleAction.cs:8
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleNewFlow.cs:6
+      - src/Lab.Core.Workflow.EventFlow/Plugins/IHandleNewFlow.cs:8
+
+  - id: core-plugin-conventions
+    area: workflow
+    question: How is a plugin class matched to a BPMN element?
+    expected: By class name. "{TaskId}Handler" handles a task, "{ActionName}ActionHandler" an action, "{ProcessId}NewFlowHandler" the start of a process.
+    evidence:
+      - src/Lab.Core.Workflow.EventFlow/Plugins/FlowPluginConventions.cs:6
+      - src/Lab.Core.Workflow.EventFlow/Plugins/FlowPluginConventions.cs:7
+      - src/Lab.Core.Workflow.EventFlow/Plugins/FlowPluginConventions.cs:8
+      - src/Lab.Core.Workflow.EventFlow/Plugins/FlowPluginConventions.cs:10
+
+  - id: core-flow-context
+    area: workflow
+    question: What can a plugin do through FlowContext?
+    expected: SetData (FlowDataUpdated), ChangeStatus (FlowStatusChanged) and RaiseFact (FlowFactRaised); the new events are collected for the engine to append.
+    evidence:
+      - src/Lab.Core.Workflow.EventFlow/Plugins/FlowContext.cs:18
+      - src/Lab.Core.Workflow.EventFlow/Plugins/FlowContext.cs:21
+      - src/Lab.Core.Workflow.EventFlow/Plugins/FlowContext.cs:23
+
+  - id: core-signalr-helper
+    area: realtime
+    question: How does the SignalR helper send messages, and how is it registered?
+    expected: MessageHubUtility<THub> implements IMessageHubUtility over IHubContext<THub>; SendToAll uses Clients.All.SendAsync(method, payload), SendToSpecifiedUsers uses Clients.Users(userIds).SendAsync(method, payload). AddMessageHubUtility<THub>() registers it as a singleton. The hub route and method names are chosen by the consumer.
+    evidence:
+      - src/Lab.Core.MessageHubs/IMessageHubUtility.cs:4
+      - src/Lab.Core.MessageHubs/MessageHubUtility.cs:5
+      - src/Lab.Core.MessageHubs/MessageHubUtility.cs:9
+      - src/Lab.Core.MessageHubs/MessageHubUtility.cs:12
+      - src/Lab.Core.MessageHubs/MessageHubExtensions.cs:9
+      - src/Lab.Core.MessageHubs/MessageHubExtensions.cs:12
+
+  - id: core-rate-card-client-calls
+    area: http
+    question: Which HTTP calls does the rate card client make?
+    expected:
+      - "GET api/rate-cards/{productCode} (404 returns null)"
+      - "GET api/residual-values?assetType={assetType}&termMonths={termMonths}"
+    evidence:
+      - src/Lab.Core.Clients.Pricing/RateCardClient.cs:10
+      - src/Lab.Core.Clients.Pricing/RateCardClient.cs:11
+      - src/Lab.Core.Clients.Pricing/RateCardClient.cs:22
+
+  - id: core-rate-card-client-config
+    area: config
+    question: Where does the rate card client get its base address?
+    expected: Configuration key Clients:RateCards:BaseAddress, bound through RateCardClientOptions; a missing value throws at client creation. AddRateCardClient returns the IHttpClientBuilder so the consumer can add resilience.
+    evidence:
+      - src/Lab.Core.Clients.Pricing/RateCardClientOptions.cs:5
+      - src/Lab.Core.Clients.Pricing/RateCardClientOptions.cs:7
+      - src/Lab.Core.Clients.Pricing/ServiceCollectionExtensions.cs:12
+      - src/Lab.Core.Clients.Pricing/ServiceCollectionExtensions.cs:15
+      - src/Lab.Core.Clients.Pricing/ServiceCollectionExtensions.cs:19
+
+  - id: core-test-double
+    area: tests
+    question: How do the tests stand in for the Pricing API?
+    expected: A stub HttpMessageHandler plugged in with ConfigurePrimaryHttpMessageHandler; no WireMock in this repository.
+    evidence:
+      - tests/Lab.Core.Tests/RateCardClientTests.cs:12
+      - tests/Lab.Core.Tests/RateCardClientTests.cs:30
+
+  - id: core-ci-publish
+    area: ci
+    question: When and where are the packages published?
+    expected: On tags v*, the CI job packs inside Docker and runs dotnet nuget push to GitHub Packages with the job token (packages write permission).
+    evidence:
+      - .github/workflows/ci.yml:6
+      - .github/workflows/ci.yml:11
+      - .github/workflows/ci.yml:25
+      - .github/workflows/ci.yml:38
