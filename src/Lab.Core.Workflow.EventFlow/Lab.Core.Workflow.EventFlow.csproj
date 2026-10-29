@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Lab.Core.Workflow.EventFlow</PackageId>
+    <Description>Flow aggregate, flow events, the EventFlowAnalyzer and the Flow Engine plugin interfaces.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lab.Core.Transform.Bpmn\Lab.Core.Transform.Bpmn.csproj" />
+  </ItemGroup>
+</Project>

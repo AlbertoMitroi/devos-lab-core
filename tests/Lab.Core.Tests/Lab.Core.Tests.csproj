@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Lab.Core.Workflow.EventFlow\Lab.Core.Workflow.EventFlow.csproj" />
+    <ProjectReference Include="..\..\src\Lab.Core.Clients.Pricing\Lab.Core.Clients.Pricing.csproj" />
+    <ProjectReference Include="..\..\src\Lab.Core.MessageHubs\Lab.Core.MessageHubs.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Processes\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

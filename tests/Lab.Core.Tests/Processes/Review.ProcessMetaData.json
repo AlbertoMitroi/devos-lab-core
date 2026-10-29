@@ -1,0 +1,15 @@
+{
+  "processId": "Review",
+  "displayName": "Review",
+  "startedBy": [ "ReviewRequested" ],
+  "statuses": {
+    "End_Accepted": "ReviewAccepted",
+    "End_Rejected": "ReviewRejected"
+  },
+  "actions": {
+    "Withdraw": { "displayName": "Withdraw", "availableDuring": [ "Decide" ] }
+  },
+  "participants": {
+    "Reviewer": "ReviewTeam"
+  }
+}

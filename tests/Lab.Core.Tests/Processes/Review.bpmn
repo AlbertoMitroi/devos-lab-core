@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_Review" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:collaboration id="Collaboration_Review">
+    <bpmn:participant id="Participant_Review" processRef="Review" />
+  </bpmn:collaboration>
+  <bpmn:process id="Review" name="Review" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_Review">
+      <bpmn:lane id="Lane_System" name="System">
+        <bpmn:flowNodeRef>Start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Check</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Reviewer" name="Reviewer">
+        <bpmn:flowNodeRef>Decide</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start" name="Review requested" />
+    <bpmn:serviceTask id="Check" name="Check" />
+    <bpmn:userTask id="Decide" name="Decide" />
+    <bpmn:exclusiveGateway id="Gateway_Decision" default="Flow_Rejected" />
+    <bpmn:endEvent id="End_Accepted" name="Accepted" />
+    <bpmn:endEvent id="End_Rejected" name="Rejected" />
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start" targetRef="Check" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Check" targetRef="Decide" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Decide" targetRef="Gateway_Decision" />
+    <bpmn:sequenceFlow id="Flow_Accepted" sourceRef="Gateway_Decision" targetRef="End_Accepted">
+      <bpmn:conditionExpression>Accepted</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Rejected" sourceRef="Gateway_Decision" targetRef="End_Rejected" />
+  </bpmn:process>
+</bpmn:definitions>

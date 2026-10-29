@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Lab.Core.Transform.Bpmn</PackageId>
+    <Description>Loads BPMN 2.0 process files and their ProcessMetaData.json into process definitions.</Description>
+  </PropertyGroup>
+</Project>
