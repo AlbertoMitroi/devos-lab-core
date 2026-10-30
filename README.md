@@ -19,3 +19,7 @@ docker build --target packages --build-arg VERSION=1.0.0 --output type=local,des
 ```
 
 A tag `v*` publishes the packages from GitHub Actions.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
